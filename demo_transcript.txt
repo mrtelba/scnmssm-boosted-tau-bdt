@@ -1,0 +1,476 @@
+ ▐▛███▛█   Claude Code v2.1.308
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~/demo_paper3
+
+
+❯ I am reproducing results from my paper arXiv:2609.29620. Read                 
+  train_2level.py, domain_shift.py, robustness_check.py and                     
+  Paper3_Technical_Record.md. In about ten lines: what each script does, which  
+  data files they need, and which paths are hard-coded.                         
+
+  Read 4 files, listed 2 directories (ctrl+o to expand)
+
+● Here's what each script does, what it needs, and what's hard-coded:
+
+  1. train_2level.py trains the same gradient-boosted classifier (200 trees,
+     depth 3, seed 42) at two levels: single fat jet (9 features) and full event
+     (32 features). It balances the classes and uses a 70/30 split, then prints
+     the AUC, signal efficiency at 10%, 5% and 1% background, and the feature
+     importances. It also saves a ROC plot. The record gives 0.757 for jet level
+     and 0.941 for event level.
+  2. robustness_check.py retrains the event-level classifier on four input sets:
+     all 32 features, no pT and no HT (28), multiplicity plus soft-drop mass
+     (7), and counting only (2). These give the robustness table: 0.941 / 0.936
+     / 0.900 / 0.769.
+  3. domain_shift.py first prints sample means. It then takes 20,000 events per
+     class, trains on the Z pT(ττ) > 100 slice and tests on both slices, then
+     does the reverse. This produces Table 5 (0.936, 0.727, 0.910, 0.867).
+  4. Data files: train_2level.py reads jetlevel_sig.npy, jetlevel_bkg.npy,
+     evtlevel_sig.npy and evtlevel_bkg.npy. robustness_check.py reads only the
+     two evtlevel_* files. domain_shift.py reads both evtlevel_* files plus
+     evtlevel_z50.npy.
+  5. All five files are in /home/hp/demo_paper3. Their sizes match the shapes in
+     the record: (354871, 9), (139917, 9), (100000, 32), (50000, 32) and
+     (20000, 32). None of the three scripts uses the tt̄ arrays.
+  6. Hard-coded paths: there is only one absolute path,
+     /home/hp/Desktop/Paper3_Figures/ROC_2level.png (train_2level.py:84). That
+     folder exists.
+  7. Every .npy load uses a bare relative filename, so the scripts must be run
+     from the folder that holds the arrays.
+  8. The record also names other locations, but no script uses them:
+     ~/MG5_aMC_v2_9_18 as the working folder, ~/Desktop/Paper3_data as the
+     backup, and the ROOT path /home/hp/Desktop/Codes/root.
+  9. Caveats from the record's Addendum C: the jet-level split mixes jets from
+     the same event across training and test, so the jet-level AUC may be
+     slightly optimistic. domain_shift.py reuses about 14% of signal events
+     between the two slices. Its m50 line (lines 73–81) is convoluted but trains
+     on the correct split.
+  10. No other flags are hard-coded: the scripts take no command-line arguments,
+      and all seeds are fixed at 42, so reruns should match exactly if your
+      scikit-learn version is the same.
+
+✻ Crunched for 23s · done ٥:٣١ م
+
+※ recap: You're reproducing results from your arXiv:2609.29620 paper, and I've summarized the three scripts, their data files (all present) and the one hard-coded output path. Next, run them from /home/hp/demo_paper3 and compare the AUCs with the paper. (disable recaps in /config)
+
+❯ In train_2level.py make the output path relative (save the figure next to the 
+  script). Change nothing else. Show me the diff before applying.               
+
+● Here's the proposed change. Nothing has been applied yet:
+
+  --- train_2level.py
+  +++ train_2level.py
+  @@ -81,6 +81,5 @@
+   ax.legend(fontsize=10, loc='lower right')
+   ax.grid(alpha=0.3)
+   plt.tight_layout()
+  -plt.savefig('/home/hp/Desktop/Paper3_Figures/ROC_2level.png',
+  -            dpi=150)
+  +plt.savefig('ROC_2level.png', dpi=150)
+   print('\nSaved: ROC_2level.png')
+
+  A relative path is resolved from the directory you run the script in. The
+  figure lands next to the script only if you run it from /home/hp/demo_paper3.
+  You already have to run it from there, because the .npy loads use bare
+  filenames too.
+
+  If you want the figure saved next to the script no matter where you run it
+  from, I'd need to add import os and build the path from
+  os.path.dirname(os.path.abspath(__file__)). That goes slightly beyond "change
+  nothing else", so I've left it out.
+
+  Shall I apply the version above?
+
+✻ Worked for 6s · done ٥:٣٧ م
+
+❯ yes, apply it                                                                 
+
+● Update(train_2level.py)
+  ⎿  Added 1 line, removed 2 lines
+      81  ax.legend(fontsize=10, loc='lower right')
+      82  ax.grid(alpha=0.3)
+      83  plt.tight_layout()
+      84 -plt.savefig('/home/hp/Desktop/Paper3_Figures/ROC_2level.png',  
+      85 -            dpi=150)                                           
+      84 +plt.savefig('ROC_2level.png', dpi=150)                         
+      85  print('\nSaved: ROC_2level.png')
+
+● The change is in: train_2level.py:84 now saves to ROC_2level.png in whatever
+  directory you run it from, and nothing else in the file changed. I haven't run
+  the script.
+
+  Because the file changed, its sha256 no longer matches the one listed in
+  Addendum B of Paper3_Technical_Record.md (fb2e9ada…). Update that entry if you
+  want the record to stay accurate.
+
+✻ Worked for 10s · done ٥:٣٨ م
+
+❯ Run train_2level.py and report both AUCs. The paper reports about 0.757 (jet  
+  level) and 0.941 (event level). Do not change anything to match them; if they 
+  differ, say by how much.                                                      
+
+  Listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+● Both AUCs match the paper to within rounding. The script ran unchanged in
+  about 3 minutes 19 seconds, using Python 3.10.12, scikit-learn 1.7.2 and NumPy
+  2.2.6.
+
+  ┌─────────────┬───────────────────┬────────────────┬───────┬────────────┐
+  │    Level    │  Balanced sample  │ AUC (this run) │ Paper │ Difference │
+  ├─────────────┼───────────────────┼────────────────┼───────┼────────────┤
+  │ Jet level   │ 139,917 + 139,917 │ 0.7568         │ 0.757 │ −0.0002    │
+  ├─────────────┼───────────────────┼────────────────┼───────┼────────────┤
+  │ Event level │ 50,000 + 50,000   │ 0.9405         │ 0.941 │ −0.0005    │
+  └─────────────┴───────────────────┴────────────────┴───────┴────────────┘
+
+  - Jet level: 0.7568 rounds to 0.757, so it matches.
+  - Event level: The script only prints four decimals, so 0.9405 sits right on
+    the rounding edge between 0.940 and 0.941. The gap of 0.0005 is under half
+    the cross-validated spread in the record (0.9410 ± 0.0011), so it's
+    consistent.
+  - Other checks: At event level, signal efficiency at 10% background is 0.823.
+    The top feature weights are j1_pT 0.342 and j2_SDmass 0.170, against the
+    record's 0.342 and 0.168.
+
+  The ROC figure is saved at /home/hp/demo_paper3/ROC_2level.png, and the full
+  log is at /tmp/claude-1000/-home-hp-demo-paper3/be7dfdb2-a79e-40a7-b371-06d847
+  73b9bd/scratchpad/train_2level_out.txt.
+
+✻ Cogitated for 3m 38s · done ٥:٤٢ م
+
+❯ Before running domain_shift.py, tell me what AUC you expect when the model    
+  trained on Z pT>100 is tested on Z pT>50, and why. Then run it and compare    
+  with your expectation.                                                        
+
+● My expectation before running: about 0.73, compared with about 0.94 on the 
+  same slice. That is a drop of roughly 0.2.
+
+  Why:
+  - The record's numbers: Table 5 in the record gives 0.727 for this cell. All
+    seeds are fixed (rng 42, random_state=42), and train_2level.py just
+    reproduced its numbers to within 0.0005 in this environment. So unless
+    something in the data or library versions has changed, I expect 0.727 to
+    within a few thousandths.
+  - The physics: The pT>100 model leans heavily on j1_pT, which was the top
+    feature at 0.342 in the run just now. Background jets in that slice are
+    harder than signal jets: in the record, mean jet pT is 97 for background
+    against 83 for signal. So the model learns that a softer leading jet means
+    signal. The pT>50 Z sample is much softer: j1_pT falls from 145 to 87 GeV
+    and HT from 279 to 173. Those events land in the region the model calls
+    "signal", so many background events score high and the AUC drops.
+  - What partly offsets it: The pT>50 Z sample also has fewer fat jets (2.41
+    against 2.80) and probably lower subleading masses. That makes it look less
+    like signal, which helps a little, but not enough to cancel the pT effect.
+  - The reverse direction: I expect training on pT>50 and testing on pT>100 to
+    lose much less, about 0.04 (0.910 → 0.867). A softer training sample covers
+    more of the region the harder sample occupies.
+
+  Now running it unchanged:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The model trained on pT>100 and tested on pT>50 gave AUC = 0.7268, against my
+  expected ~0.73 and the record's 0.727. The difference from the record is
+  −0.0002, effectively an exact match. The script ran unchanged in about 1
+  minute 9 seconds.
+
+  ┌─────────────────────┬─────────────────────┬───────────────┬────────────┐
+  │ Trained on → tested │      This run       │ Record, Table │ Difference │
+  │          on         │                     │       5       │            │
+  ├─────────────────────┼─────────────────────┼───────────────┼────────────┤
+  │ 100 → 100           │ 0.9360 (eff@10%     │ 0.936 (0.803) │ 0.0000     │
+  │                     │ 0.803)              │               │            │
+  ├─────────────────────┼─────────────────────┼───────────────┼────────────┤
+  │ 100 → 50            │ 0.7268 (0.372)      │ 0.727 (0.372) │ −0.0002    │
+  ├─────────────────────┼─────────────────────┼───────────────┼────────────┤
+  │ 50 → 50             │ 0.9095 (0.738)      │ 0.910 (0.738) │ −0.0005    │
+  ├─────────────────────┼─────────────────────┼───────────────┼────────────┤
+  │ 50 → 100            │ 0.8670 (0.620)      │ 0.867 (0.620) │ 0.0000     │
+  └─────────────────────┴─────────────────────┴───────────────┴────────────┘
+
+  The drops match my expectation and the record: −0.2092 going from pT>100 to
+  pT>50, and −0.0425 the other way.
+
+  The sample means printed by the script fit the mechanism I gave, with one
+  refinement:
+  - Leading jet pT: signal j1_pT is 127.7 GeV, between Z pT>100 (145.1) and Z
+    pT>50 (87.1). The pT>100 model learns that a softer leading jet means
+    signal, and the pT>50 background lies even further in that direction, so it
+    scores as signal.
+  - MET: this pushes the same way. Z pT>100 has 67.7 GeV against 56.3 for
+    signal, but Z pT>50 has only 42.4.
+  - What I left out: HT pulls the other way. Signal is 307 GeV and Z pT>100 is
+    279, so the model learns that high HT means signal, and the pT>50 events at
+    173 look more like background. Together with the lower fat-jet multiplicity
+    and subleading masses, this keeps the AUC at 0.73 instead of letting it fall
+    further.
+
+  These numbers still carry the caveats in Addendum C of the record. About 14%
+  of signal events are shared between the two slices, which if anything makes
+  the shifted AUC slightly optimistic. Each test set is also only about 6,000
+  events with no error bar.
+
+  The full log is at /tmp/claude-1000/-home-hp-demo-paper3/be7dfdb2-a79e-40a7-b3
+  71-06d84773b9bd/scratchpad/domain_shift_out.txt.
+
+✻ Worked for 1m 35s · done ٥:٤٤ م
+
+❯ The record (Addendum C.2) claims that about 14% of the signal events in the   
+  shifted test set were also in the training set. I have not verified this.     
+  Measure it with a new script, without modifying domain_shift.py, and report   
+  the exact number.                                                             
+
+● Write(measure_signal_overlap.py)
+  ⎿  Wrote 66 lines to measure_signal_overlap.py
+       1 import numpy as np
+       2 from sklearn.model_selection import train_test_split
+       4 # Replays the random draws of domain_shift.py (same seed, same c
+         all
+       5 # order) and counts signal events shared between the training se
+       6 # one model and the shifted test set of the other. No BDT is tra
+         ined.
+       7 
+       9 
+      10 S    = np.nan_to_num(np.load('evtlevel_sig.npy'))
+     … +58 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The record's claim holds: 843 of the 6,000 signal events (14.05%) in the pT>50
+  test set were also in the pT>100 model's training set.
+
+  I wrote a new script, /home/hp/demo_paper3/measure_signal_overlap.py, and left
+  domain_shift.py untouched. The new script repeats the exact random draws and
+  train/test splits of domain_shift.py (same seeds, same order) and counts
+  shared signal events without training anything.
+
+  ┌───────────────────────┬─────────────────┬──────────────────┬────────────┐
+  │       Direction       │   Signal in     │    Signal in     │   Shared   │
+  │                       │  training set   │ shifted test set │            │
+  ├───────────────────────┼─────────────────┼──────────────────┼────────────┤
+  │ Trained on pT>100,    │ 14,000          │ 6,000            │ 843        │
+  │ tested on pT>50       │                 │                  │ (14.05%)   │
+  ├───────────────────────┼─────────────────┼──────────────────┼────────────┤
+  │ Trained on pT>50,     │ 14,000          │ 6,000            │ 829        │
+  │ tested on pT>100      │                 │                  │ (13.82%)   │
+  └───────────────────────┴─────────────────┴──────────────────┴────────────┘
+
+  - Expected rate: if the two draws are independent, you'd expect 14,000 /
+    100,000 = 14.00%. Both measured values sit right on that.
+  - Same events, not just same index: comparing the full 32-feature rows gives
+    identical counts, so no duplicate events in the signal file add to the
+    overlap.
+  - Within each slice: training and test sets share 0 signal events, as they
+    should.
+
+  One correction to the record (Addendum C.3), which I also repeated in my 
+  previous answer: each test set holds 6,000 events per class (12,000 in total),
+  not "about 6,000 events (3,000 per class)". With 20,000 per class and a 30%
+  test split, that's 6,000 per class.
+
+  The full output is at /tmp/claude-1000/-home-hp-demo-paper3/be7dfdb2-a79e-40a7
+  -b371-06d84773b9bd/scratchpad/overlap_out.txt.
+
+✻ Crunched for 30s · done ٥:٤٨ م
+
+❯ Act as a critical referee for the cross-slice claim in this record. Based     
+  only on what we found in this session, list the three weakest points, say how 
+  serious each one is, and say what single test you would run next for each.    
+  Do not run anything.                                                          
+
+● Reviewing as a referee, and using only what we established in this session,
+  these are the three weakest points in the cross-slice claim, most serious
+  first:
+
+  1. The record claims more than the test shows about the momentum variables. 
+  Serious.
+  The [v3 note] under section 7.4 says the cross-slice test shows that "dropping
+  the momentum variables does not remove the dependence on the generation cut."
+  But domain_shift.py trains on all 32 inputs, including HT and all three
+  fat-jet pT values. We read that in the code, and Addendum A confirms it. The
+  cross-slice test never dropped the momentum variables, so it cannot say
+  anything about the "no pT, no HT" configuration. The 0.936 that appears in
+  both tables is a coincidence, as Addendum A itself notes. A referee who checks
+  the code will catch this, and the dropped-momentum claim is the one point
+  Major Comment 8 asks about.
+  Next test: rerun the cross-slice test with the 28-input set from
+  robustness_check.py (no HT, no j{k}_pT) in both directions. If the 100 → 50
+  loss stays near 0.2, the v3 sentence becomes true. If it shrinks a lot, the
+  claim has to change.
+
+  2. Why the AUC drops is inferred, not shown. Moderate to serious.
+  The current explanation is that the model learns "softer leading jet and lower
+  MET mean signal", and the pT>50 background extrapolates into that region.
+  That comes from my reading of the sample means: signal j1_pT 127.7 sits
+  between Z pT>100 (145.1) and Z pT>50 (87.1), and MET falls to 42 GeV in pT>50.
+  HT, multiplicity and subleading masses pull the other way. No measurement
+  links the AUC loss to particular features. What we did establish is that the
+  pT>50 slice is not intrinsically hard: trained and tested on itself, it
+  reaches 0.9095. So the loss is a training mismatch, but which features cause
+  it is untested. If the paper names a cause, a referee can ask for evidence.
+  Next test: take the pT>100 model and compare its scores on the pT>50
+  background with its scores on the pT>100 background, binned in j1_pT and MET.
+  If the mismatch is concentrated at low j1_pT and MET, the mechanism holds. A
+  cheaper alternative is to permute one feature at a time in the shifted test
+  set and see which ones recover the AUC.
+
+  3. Each result is a single split with no uncertainty. Moderate, mainly a 
+  presentation issue.
+  Table 5 comes from one 70/30 split and one seed, with 6,000 events per class
+  in each test set. We corrected the record's "3,000 per class" in this session.
+  No error bars are given. As a rough estimate, the statistical error on an AUC
+  near 0.73 with 6,000 + 6,000 events is about ±0.005, and smaller near 0.93.
+  That is far below the 0.209 drop and well below the 0.043 drop, so I don't
+  expect either result to disappear. But that is an estimate, not a measurement,
+  and this paper reports cross-validated errors everywhere else (Table 7).
+  Next test: five-fold cross-validation of all four cells of Table 5, reporting
+  the mean ± standard deviation of each AUC and of both drops.
+
+  Not in the top three: the 14% signal reuse.
+  We measured it directly: 843 of 6,000 signal events (14.05%) in one direction
+  and 829 of 6,000 (13.82%) in the other. It's real, but it can only make the
+  shifted AUC look better, so the true loss is at least as large as reported. It
+  works against the claim, not for it. Point 3's cross-validation can fix it at
+  the same time by drawing the signal from disjoint pools.
+
+✻ Sautéed for 31s · done ٥:٤٩ م
+
+※ recap: You're reproducing the results of arXiv:2609.29620, and both AUCs in train_2level.py and all four cross-slice AUCs in domain_shift.py match the paper. Next, I'd rerun the cross-slice test without the pT and HT inputs to check the record's claim about the momentum variables. (disable recaps in /config)
+
+❯ Please repeat points 1 and 2 of your referee review in full, in the same      
+  wording. Do not run anything.                                                 
+
+● 1. The record claims more than the test shows about the momentum variables. 
+  Serious.
+  The [v3 note] under section 7.4 says the cross-slice test shows that "dropping
+  the momentum variables does not remove the dependence on the generation cut."
+  But domain_shift.py trains on all 32 inputs, including HT and all three
+  fat-jet pT values. We read that in the code, and Addendum A confirms it. The
+  cross-slice test never dropped the momentum variables, so it cannot say
+  anything about the "no pT, no HT" configuration. The 0.936 that appears in
+  both tables is a coincidence, as Addendum A itself notes. A referee who checks
+  the code will catch this, and the dropped-momentum claim is the one point
+  Major Comment 8 asks about.
+  Next test: rerun the cross-slice test with the 28-input set from
+  robustness_check.py (no HT, no j{k}_pT) in both directions. If the 100 → 50
+  loss stays near 0.2, the v3 sentence becomes true. If it shrinks a lot, the
+  claim has to change.
+
+  2. Why the AUC drops is inferred, not shown. Moderate to serious.
+  The current explanation is that the model learns "softer leading jet and lower
+  MET mean signal", and the pT>50 background extrapolates into that region.
+  That comes from my reading of the sample means: signal j1_pT 127.7 sits
+  between Z pT>100 (145.1) and Z pT>50 (87.1), and MET falls to 42 GeV in pT>50.
+  HT, multiplicity and subleading masses pull the other way. No measurement
+  links the AUC loss to particular features. What we did establish is that the
+  pT>50 slice is not intrinsically hard: trained and tested on itself, it
+  reaches 0.9095. So the loss is a training mismatch, but which features cause
+  it is untested. If the paper names a cause, a referee can ask for evidence.
+  Next test: take the pT>100 model and compare its scores on the pT>50
+  background with its scores on the pT>100 background, binned in j1_pT and MET.
+  If the mismatch is concentrated at low j1_pT and MET, the mechanism holds. A
+  cheaper alternative is to permute one feature at a time in the shifted test
+  set and see which ones recover the AUC.
+
+✻ Cooked for 7s · done ٦:٠٠ م
+
+❯ I accept point 1: my record overstates what the cross-slice test shows.       
+  Please run the 28-input cross-slice test (no HT, no j{k}_pT) in both          
+  directions in a NEW script, without modifying existing files, and report the  
+  AUCs next to the 32-input ones. I accept points 2 and 3 as stated limitations 
+  for now: the explanation of the drop is inferred, not shown, and Table 5 has  
+  no error bars. I will not claim more than the data support.                   
+
+● Write(domain_shift_28.py)
+  ⎿  Wrote 87 lines to domain_shift_28.py
+      1 import numpy as np
+      2 from sklearn.ensemble import GradientBoostingClassifier
+      3 from sklearn.model_selection import train_test_split
+      5 
+      6 # Cross-slice test of domain_shift.py, repeated with the 28-input
+         set
+      7 # of robustness_check.py (no HT, no j{k}_pT). Same seed, same dra
+      8 # same splits as domain_shift.py; only the columns differ. The 32
+        -input
+      9 # run is repeated on the same draws as a reference.
+     … +82 lines (ctrl+o to expand)
+  Ran 1 shell command (ctrl+o to expand)
+
+● With HT and the three fat-jet pT values removed, training on pT>100 and
+  testing on pT>50 still loses 0.136 in AUC, against 0.209 with all 32 inputs.
+  So the dependence on the generation cut shrinks by about a third but doesn't
+  go away.
+
+  I put this in a new script, /home/hp/demo_paper3/domain_shift_28.py, and left
+  the existing files untouched. It uses the same seed, draws and splits as
+  domain_shift.py, and only the input columns differ. The 32-input column below
+  reproduces the domain_shift.py output exactly, which confirms the draws are
+  identical.
+
+  AUC, with signal efficiency at 10% background in brackets:
+
+  ┌────────────────┬────────────────┬───────────────────────────────┐
+  │  Train → test  │   32 inputs    │ 28 inputs (no HT, no j{k}_pT) │
+  ├────────────────┼────────────────┼───────────────────────────────┤
+  │ 100 → 100      │ 0.9360 (0.803) │ 0.9315 (0.799)                │
+  ├────────────────┼────────────────┼───────────────────────────────┤
+  │ 100 → 50       │ 0.7268 (0.372) │ 0.7952 (0.447)                │
+  ├────────────────┼────────────────┼───────────────────────────────┤
+  │ 50 → 50        │ 0.9095 (0.738) │ 0.9064 (0.735)                │
+  ├────────────────┼────────────────┼───────────────────────────────┤
+  │ 50 → 100       │ 0.8670 (0.620) │ 0.8723 (0.640)                │
+  ├────────────────┼────────────────┼───────────────────────────────┤
+  │ Drop, 100 → 50 │ −0.2092        │ −0.1363                       │
+  ├────────────────┼────────────────┼───────────────────────────────┤
+  │ Drop, 50 → 100 │ −0.0425        │ −0.0341                       │
+  └────────────────┴────────────────┴───────────────────────────────┘
+
+  What this does and doesn't support:
+  - The [v3 note] in 7.4 now has evidence behind it, if worded precisely.
+    Removing HT and fat-jet pT does not remove the dependence: a loss of 0.136
+    remains.
+  - The momentum variables do account for part of the loss, about 0.07 of the
+    0.209. Within each slice, removing them costs very little (−0.0045 and
+    −0.0031).
+  - "Momentum variables" is too broad. The 28-input set still contains MET,
+    which my point 2 named as a possible driver. Unless MET is also removed and
+    tested, the accurate wording is "removing HT and the fat-jet pT".
+  - Points 2 and 3 still apply. This is still one split with no error bars. A
+    rough estimate puts the error at about ±0.005 per AUC, which is far below
+    the 0.07 difference, but that is an estimate, not a measurement. It also
+    doesn't show which of the remaining 28 features cause the 0.136.
+
+  The full output is at /tmp/claude-1000/-home-hp-demo-paper3/be7dfdb2-a79e-40a7
+  -b371-06d84773b9bd/scratchpad/domain_shift_28_out.txt.
+
+✻ Baked for 2m 32s · done ٦:٠٦ م
+
+❯ Decision: I will reword the record sentence to "removing HT and fat-jet pT    
+  reduces the 100→50 loss from 0.209 to 0.136 but does not remove it", and I    
+  will not claim anything about MET until it is tested. I will leave the MET    
+  test and the five-fold cross-validation for the first month of the            
+  fellowship. Do not edit any files now.                                        
+
+● Understood. I haven't edited any files.
+
+  Your sentence matches what we measured: the 100→50 drop was −0.2092 with all
+  32 inputs and −0.1363 with 28. Two small notes for when you edit the record:
+
+  - The sample behind the numbers: they come from one 70/30 split with 20,000
+    events per class. Adding "(single split, 20,000 events per class)" next to
+    the numbers is consistent with accepting point 3 as a limitation.
+  - The second correction: Addendum C.3 still says "3,000 per class". The
+    measured value is 6,000 per class, 12,000 in total.
+
+  Items left open for the first month of the fellowship:
+  - The MET test.
+  - Five-fold cross-validation of Table 5, with the signal drawn from disjoint
+    pools so it also removes the 14% overlap.
+  - Showing which features cause the drop (point 2).
+
+  So far this session added two new files to /home/hp/demo_paper3:
+  measure_signal_overlap.py and domain_shift_28.py. The only change to an
+  existing file is the save path in train_2level.py, so its sha256 no longer
+  matches Addendum B.
+
+✻ Churned for 7s · done ٦:٠٨ م
